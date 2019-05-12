@@ -1,3 +1,3 @@
 # Inventory Checker
-- Simple app which can be used to check inventory.
-- It works better with a barcode/QC code scanner.
+- A simple inventory checking application.
+- Can be used with a barcode/QR code scanner.
