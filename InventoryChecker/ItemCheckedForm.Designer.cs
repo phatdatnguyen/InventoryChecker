@@ -28,27 +28,28 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
+            this.promptLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // label1
+            // promptLabel
             // 
-            this.label1.AutoSize = true;
-            this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(43, 49);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(112, 20);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Item Checked!";
+            this.promptLabel.AutoSize = true;
+            this.promptLabel.ForeColor = System.Drawing.Color.White;
+            this.promptLabel.Location = new System.Drawing.Point(37, 39);
+            this.promptLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.promptLabel.Name = "promptLabel";
+            this.promptLabel.Size = new System.Drawing.Size(158, 40);
+            this.promptLabel.TabIndex = 0;
+            this.promptLabel.Text = "Item Checked!\r\nScanned value: 0000";
+            this.promptLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // ItemCheckedForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
-            this.ClientSize = new System.Drawing.Size(200, 120);
-            this.Controls.Add(this.label1);
+            this.ClientSize = new System.Drawing.Size(240, 120);
+            this.Controls.Add(this.promptLabel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -58,6 +59,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "ItemCheckedForm";
+            this.Load += new System.EventHandler(this.ItemCheckedForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -65,6 +67,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label promptLabel;
     }
 }

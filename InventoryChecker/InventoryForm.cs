@@ -128,11 +128,23 @@ namespace InventoryChecker
                 string checkingFieldName = checkingFieldComboBox.SelectedItem.ToString();
 
                 foreach (DataRow dataRow in inventoryTable.Rows)
-                    if (dataRow[checkingFieldName].ToString() == scanCodeForm.Code)
+                    if (scanCodeForm.IsCaseSensitive)
                     {
-                        itemFound = true;
-                        dataRow["Checked"] = true;
-                        break;
+                        if (dataRow[checkingFieldName].ToString() == scanCodeForm.Code)
+                        {
+                            itemFound = true;
+                            dataRow["Checked"] = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (dataRow[checkingFieldName].ToString().ToLower() == scanCodeForm.Code.ToLower())
+                        {
+                            itemFound = true;
+                            dataRow["Checked"] = true;
+                            break;
+                        }
                     }
 
                 if (itemFound)
@@ -145,6 +157,7 @@ namespace InventoryChecker
                         ItemCheckedForm.Invoke(new Action(() => { ItemCheckedForm.Close(); }));
                     });
 
+                    ItemCheckedForm.ScannedValue = scanCodeForm.Code;
                     ItemCheckedForm.ShowDialog(this);
                 }
                 else

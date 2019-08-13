@@ -34,6 +34,7 @@
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.closeButton = new System.Windows.Forms.Button();
             this.guideLabel = new System.Windows.Forms.Label();
+            this.caseSensitiveCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // scanButton
@@ -78,7 +79,17 @@
             this.guideLabel.Size = new System.Drawing.Size(392, 60);
             this.guideLabel.TabIndex = 0;
             this.guideLabel.Text = "● Place the cursor in the textbox before scanning\r\n● Scan the code by using a sca" +
-    "nner or typing manually\r\n● Code scanning is case-sensitive";
+    "nner or typing manually\r\n● Code scanning is case-insensitive by default";
+            // 
+            // caseSensitiveCheckBox
+            // 
+            this.caseSensitiveCheckBox.AutoSize = true;
+            this.caseSensitiveCheckBox.Location = new System.Drawing.Point(13, 118);
+            this.caseSensitiveCheckBox.Name = "caseSensitiveCheckBox";
+            this.caseSensitiveCheckBox.Size = new System.Drawing.Size(131, 24);
+            this.caseSensitiveCheckBox.TabIndex = 15;
+            this.caseSensitiveCheckBox.Text = "Case-sensitive";
+            this.caseSensitiveCheckBox.UseVisualStyleBackColor = true;
             // 
             // ScanCodeForm
             // 
@@ -86,6 +97,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.closeButton;
             this.ClientSize = new System.Drawing.Size(424, 161);
+            this.Controls.Add(this.caseSensitiveCheckBox);
             this.Controls.Add(this.guideLabel);
             this.Controls.Add(this.scanButton);
             this.Controls.Add(this.codeTextBox);
@@ -111,5 +123,6 @@
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.Button closeButton;
         private System.Windows.Forms.Label guideLabel;
+        private System.Windows.Forms.CheckBox caseSensitiveCheckBox;
     }
 }

@@ -14,6 +14,7 @@ namespace InventoryChecker
     {
         //Properties
         public string Code { get; set; }
+        public bool IsCaseSensitive { get; set; }
 
         //Contructor
         public ScanCodeForm()
@@ -36,6 +37,7 @@ namespace InventoryChecker
         private void scanButton_Click(object sender, EventArgs e)
         {
             Code = codeTextBox.Text;
+            IsCaseSensitive = caseSensitiveCheckBox.Checked;
             codeTextBox.Clear();
             DialogResult = DialogResult.OK;
             Close();
