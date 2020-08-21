@@ -20,7 +20,7 @@ namespace InventoryChecker
 
         private void ItemCheckedForm_Load(object sender, EventArgs e)
         {
-            promptLabel.Text = "Item Checked!\nScanned value: " + ScannedValue;
+            promptScannedValue.Text = ScannedValue;
         }
     }
 }

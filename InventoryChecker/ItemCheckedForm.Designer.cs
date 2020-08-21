@@ -28,28 +28,42 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.promptLabel = new System.Windows.Forms.Label();
+            this.promptScannedValue = new System.Windows.Forms.Label();
+            this.promptItemChecked = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // promptLabel
+            // promptScannedValue
             // 
-            this.promptLabel.AutoSize = true;
-            this.promptLabel.ForeColor = System.Drawing.Color.White;
-            this.promptLabel.Location = new System.Drawing.Point(37, 39);
-            this.promptLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.promptLabel.Name = "promptLabel";
-            this.promptLabel.Size = new System.Drawing.Size(158, 40);
-            this.promptLabel.TabIndex = 0;
-            this.promptLabel.Text = "Item Checked!\r\nScanned value: 0000";
-            this.promptLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.promptScannedValue.AutoSize = true;
+            this.promptScannedValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F);
+            this.promptScannedValue.ForeColor = System.Drawing.Color.White;
+            this.promptScannedValue.Location = new System.Drawing.Point(109, 99);
+            this.promptScannedValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.promptScannedValue.Name = "promptScannedValue";
+            this.promptScannedValue.Size = new System.Drawing.Size(89, 37);
+            this.promptScannedValue.TabIndex = 0;
+            this.promptScannedValue.Text = "0000";
+            this.promptScannedValue.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // promptItemChecked
+            // 
+            this.promptItemChecked.AutoSize = true;
+            this.promptItemChecked.ForeColor = System.Drawing.Color.White;
+            this.promptItemChecked.Location = new System.Drawing.Point(94, 30);
+            this.promptItemChecked.Name = "promptItemChecked";
+            this.promptItemChecked.Size = new System.Drawing.Size(118, 40);
+            this.promptItemChecked.TabIndex = 0;
+            this.promptItemChecked.Text = "Item checked!\r\nScanned value:";
+            this.promptItemChecked.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // ItemCheckedForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
-            this.ClientSize = new System.Drawing.Size(240, 120);
-            this.Controls.Add(this.promptLabel);
+            this.BackColor = System.Drawing.Color.Gray;
+            this.ClientSize = new System.Drawing.Size(300, 178);
+            this.Controls.Add(this.promptItemChecked);
+            this.Controls.Add(this.promptScannedValue);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -67,6 +81,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Label promptLabel;
+        private System.Windows.Forms.Label promptScannedValue;
+        private System.Windows.Forms.Label promptItemChecked;
     }
 }

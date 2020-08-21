@@ -40,7 +40,7 @@
             // scanButton
             // 
             this.scanButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.scanButton.Location = new System.Drawing.Point(197, 114);
+            this.scanButton.Location = new System.Drawing.Point(197, 154);
             this.scanButton.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.scanButton.Name = "scanButton";
             this.scanButton.Size = new System.Drawing.Size(100, 30);
@@ -51,7 +51,7 @@
             // 
             // codeTextBox
             // 
-            this.codeTextBox.Location = new System.Drawing.Point(13, 75);
+            this.codeTextBox.Location = new System.Drawing.Point(13, 115);
             this.codeTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.codeTextBox.Name = "codeTextBox";
             this.codeTextBox.Size = new System.Drawing.Size(396, 26);
@@ -62,7 +62,7 @@
             // closeButton
             // 
             this.closeButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.closeButton.Location = new System.Drawing.Point(309, 114);
+            this.closeButton.Location = new System.Drawing.Point(309, 154);
             this.closeButton.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(100, 30);
@@ -84,7 +84,7 @@
             // caseSensitiveCheckBox
             // 
             this.caseSensitiveCheckBox.AutoSize = true;
-            this.caseSensitiveCheckBox.Location = new System.Drawing.Point(13, 118);
+            this.caseSensitiveCheckBox.Location = new System.Drawing.Point(13, 158);
             this.caseSensitiveCheckBox.Name = "caseSensitiveCheckBox";
             this.caseSensitiveCheckBox.Size = new System.Drawing.Size(131, 24);
             this.caseSensitiveCheckBox.TabIndex = 15;
@@ -93,10 +93,11 @@
             // 
             // ScanCodeForm
             // 
+            this.AcceptButton = this.scanButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.closeButton;
-            this.ClientSize = new System.Drawing.Size(424, 161);
+            this.ClientSize = new System.Drawing.Size(424, 201);
             this.Controls.Add(this.caseSensitiveCheckBox);
             this.Controls.Add(this.guideLabel);
             this.Controls.Add(this.scanButton);
