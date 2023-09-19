@@ -47,7 +47,7 @@
             this.scanButton.TabIndex = 13;
             this.scanButton.Text = "Scan";
             this.scanButton.UseVisualStyleBackColor = true;
-            this.scanButton.Click += new System.EventHandler(this.scanButton_Click);
+            this.scanButton.Click += new System.EventHandler(this.ScanButton_Click);
             // 
             // codeTextBox
             // 
@@ -57,7 +57,7 @@
             this.codeTextBox.Size = new System.Drawing.Size(396, 26);
             this.codeTextBox.TabIndex = 10;
             this.toolTip.SetToolTip(this.codeTextBox, "Place the cursor here before scanning");
-            this.codeTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.codeTextBox_KeyDown);
+            this.codeTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.CodeTextBox_KeyDown);
             // 
             // closeButton
             // 

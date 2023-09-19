@@ -1,8 +1,4 @@
-﻿using System;
-using System.Data;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Data;
 using Accord.IO;
 using Excel = Microsoft.Office.Interop.Excel;
 
@@ -11,10 +7,9 @@ namespace InventoryChecker
     public partial class InventoryForm : Form
     {
         //Fields
-        private ScanCodeForm scanCodeForm;
-        private ItemCheckedForm ItemCheckedForm;
-        private DataTable inventoryTable;
-        private bool dataLoaded;
+        private readonly ScanCodeForm scanCodeForm = new();
+        private readonly ItemCheckedForm itemCheckedForm = new();
+        private DataTable? inventoryTable;
         //Contructor
         public InventoryForm()
         {
@@ -22,12 +17,6 @@ namespace InventoryChecker
         }
 
         //Event handlers
-        private void InventoryForm_Load(object sender, EventArgs e)
-        {
-            scanCodeForm = new ScanCodeForm();
-            ItemCheckedForm = new ItemCheckedForm();
-        }
-
         private void ButtonLoadData_Click(object sender, EventArgs e)
         {
             if (loadDataOpenFileDialog.ShowDialog(this) != DialogResult.OK)
@@ -37,19 +26,9 @@ namespace InventoryChecker
             {
                 string filename = loadDataOpenFileDialog.FileName;
                 string extension = Path.GetExtension(filename);
-                if (extension == ".xls" || extension == ".xlsx")
+                if (extension == ".csv")
                 {
-                    ExcelReader excelReader = new ExcelReader(filename, true, false);
-                    TableSelectForm tableSelectForm = new TableSelectForm(excelReader.GetWorksheetList());
-
-                    if (tableSelectForm.ShowDialog(this) == DialogResult.OK && tableSelectForm.Selection != "")
-                        inventoryTable = excelReader.GetWorksheet(tableSelectForm.Selection);
-                    else
-                        return;
-                }
-                else if (extension == ".csv")
-                {
-                    CsvReader csvReader = new CsvReader(filename, true);
+                    CsvReader csvReader = new(filename, true);
                     inventoryTable = csvReader.ToTable();
                 }
                 else
@@ -87,34 +66,33 @@ namespace InventoryChecker
             inventoryTable.Columns.Add("Checked", typeof(bool));
 
             inventoryBindingSource.DataSource = inventoryTable;
+            inventoryDataGridView.DataSource = null;
             inventoryDataGridView.DataSource = inventoryBindingSource;
 
-            dataLoaded = true;
+            searchGroupBox.Enabled = true;
+            checkingGroupBox.Enabled = true;
         }
 
         private void KeywordTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (dataLoaded && e.KeyCode == Keys.Enter)
-                SearchButton_Click(searchButton, null);
+            if (inventoryTable != null && e.KeyCode == Keys.Enter)
+                SearchButton_Click(searchButton, EventArgs.Empty);
         }
 
         private void SearchButton_Click(object sender, EventArgs e)
         {
-            if (!dataLoaded)
+            if (inventoryTable == null || keywordTextBox.Text.Length == 1)
                 return;
 
             if (keywordTextBox.Text.Length == 0)
                 inventoryBindingSource.Filter = "";
 
-            if (keywordTextBox.Text.Length == 1)
-                return;
-            
             inventoryBindingSource.Filter = "[" + searchFieldComboBox.SelectedItem.ToString() + "] LIKE '%" + keywordTextBox.Text + "%'";
         }
-        
+
         private void ScanCodeButton_Click(object sender, EventArgs e)
         {
-            if (!dataLoaded)
+            if (inventoryTable == null)
                 return;
 
             inventoryBindingSource.Filter = "";
@@ -125,7 +103,7 @@ namespace InventoryChecker
                 if (scanCodeForm.ShowDialog(this) != DialogResult.OK)
                     break;
 
-                string checkingFieldName = checkingFieldComboBox.SelectedItem.ToString();
+                string checkingFieldName = checkingFieldComboBox.Text;
 
                 foreach (DataRow dataRow in inventoryTable.Rows)
                     if (scanCodeForm.IsCaseSensitive)
@@ -139,7 +117,7 @@ namespace InventoryChecker
                     }
                     else
                     {
-                        if (dataRow[checkingFieldName].ToString().ToLower() == scanCodeForm.Code.ToLower())
+                        if (scanCodeForm.Code != null && ((string)dataRow[checkingFieldName]).ToLower() == scanCodeForm.Code.ToLower())
                         {
                             itemFound = true;
                             dataRow["Checked"] = true;
@@ -151,14 +129,14 @@ namespace InventoryChecker
                 {
                     Task.Delay(2000).ContinueWith((t) =>
                     {
-                        if (ItemCheckedForm == null || ItemCheckedForm.Disposing || ItemCheckedForm.IsDisposed)
+                        if (itemCheckedForm == null || itemCheckedForm.Disposing || itemCheckedForm.IsDisposed)
                             return;
 
-                        ItemCheckedForm.Invoke(new Action(() => { ItemCheckedForm.Close(); }));
+                        itemCheckedForm.Invoke(new Action(() => { itemCheckedForm.Close(); }));
                     });
 
-                    ItemCheckedForm.ScannedValue = scanCodeForm.Code;
-                    ItemCheckedForm.ShowDialog(this);
+                    itemCheckedForm.ScannedValue = scanCodeForm.Code;
+                    itemCheckedForm.ShowDialog(this);
                 }
                 else
                 {
@@ -171,28 +149,39 @@ namespace InventoryChecker
         private void ExportButton_Click(object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
-            CopyAllToClipboard();
 
-            Excel.Application application;
-            Excel.Workbook workBook;
-            Excel.Worksheet workSheet;
-            application = new Excel.Application();
-            application.Visible = true;
-            workBook = application.Workbooks.Add(System.Reflection.Missing.Value);
-            workSheet = (Excel.Worksheet)workBook.Worksheets.get_Item(1);
-            Excel.Range range = (Excel.Range)workSheet.Cells[1, 1];
-            range.Select();
-            workSheet.PasteSpecial(range, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, true);
+            try
+            {
+                CopyInventoryToClipboard();
 
-            ReleaseObject(workSheet);
-            ReleaseObject(workBook);
-            ReleaseObject(application);
+                Excel.Application application;
+                Excel.Workbook workBook;
+                Excel.Worksheet workSheet;
+                application = new Excel.Application
+                {
+                    Visible = true
+                };
+                workBook = application.Workbooks.Add(System.Reflection.Missing.Value);
+                workSheet = (Excel.Worksheet)workBook.Worksheets.get_Item(1);
+                Excel.Range range = (Excel.Range)workSheet.Cells[1, 1];
+                range.Select();
+                workSheet.PasteSpecial(range, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, true);
 
-            Clipboard.Clear();
-            Cursor = Cursors.Default;
+                ReleaseObject(workSheet);
+                ReleaseObject(workBook);
+                ReleaseObject(application);
+
+                Clipboard.Clear();
+                Cursor = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Cursor = Cursors.Default;
+            }
         }
 
-        private void CopyAllToClipboard()
+        private void CopyInventoryToClipboard()
         {
             inventoryDataGridView.SelectAll();
             DataObject dataObj = inventoryDataGridView.GetClipboardContent();
@@ -201,11 +190,12 @@ namespace InventoryChecker
             inventoryDataGridView.ClearSelection();
         }
 
-        private void ReleaseObject(object obj)
+        private static void ReleaseObject(object? obj)
         {
             try
             {
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
+                if (obj != null)
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
                 obj = null;
             }
             catch (Exception ex)
