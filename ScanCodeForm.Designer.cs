@@ -35,16 +35,16 @@
             this.closeButton = new System.Windows.Forms.Button();
             this.guideLabel = new System.Windows.Forms.Label();
             this.caseSensitiveCheckBox = new System.Windows.Forms.CheckBox();
+            this.feedbackLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // scanButton
             // 
-            this.scanButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.scanButton.Location = new System.Drawing.Point(197, 154);
             this.scanButton.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.scanButton.Name = "scanButton";
             this.scanButton.Size = new System.Drawing.Size(100, 30);
-            this.scanButton.TabIndex = 13;
+            this.scanButton.TabIndex = 2;
             this.scanButton.Text = "Scan";
             this.scanButton.UseVisualStyleBackColor = true;
             this.scanButton.Click += new System.EventHandler(this.ScanButton_Click);
@@ -55,9 +55,9 @@
             this.codeTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.codeTextBox.Name = "codeTextBox";
             this.codeTextBox.Size = new System.Drawing.Size(396, 26);
-            this.codeTextBox.TabIndex = 10;
-            this.toolTip.SetToolTip(this.codeTextBox, "Place the cursor here before scanning");
-            this.codeTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.CodeTextBox_KeyDown);
+            this.codeTextBox.TabIndex = 0;
+            this.codeTextBox.AccessibleName = "Inventory code";
+            this.toolTip.SetToolTip(this.codeTextBox, "Scan or type a code, then press Enter");
             // 
             // closeButton
             // 
@@ -66,20 +66,19 @@
             this.closeButton.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.closeButton.Name = "closeButton";
             this.closeButton.Size = new System.Drawing.Size(100, 30);
-            this.closeButton.TabIndex = 14;
+            this.closeButton.TabIndex = 3;
             this.closeButton.Text = "Close";
             this.closeButton.UseVisualStyleBackColor = true;
             // 
             // guideLabel
             // 
             this.guideLabel.AutoSize = true;
-            this.guideLabel.ForeColor = System.Drawing.Color.Red;
+            this.guideLabel.ForeColor = System.Drawing.SystemColors.ControlText;
             this.guideLabel.Location = new System.Drawing.Point(12, 9);
             this.guideLabel.Name = "guideLabel";
             this.guideLabel.Size = new System.Drawing.Size(392, 60);
             this.guideLabel.TabIndex = 0;
-            this.guideLabel.Text = "● Place the cursor in the textbox before scanning\r\n● Scan the code by using a sca" +
-    "nner or typing manually\r\n● Code scanning is case-insensitive by default";
+            this.guideLabel.Text = "Scan or type a code, then press Enter.\r\nContinue scanning here; press Escape to close.\r\nCode matching is case-insensitive by default.";
             // 
             // caseSensitiveCheckBox
             // 
@@ -87,9 +86,20 @@
             this.caseSensitiveCheckBox.Location = new System.Drawing.Point(13, 158);
             this.caseSensitiveCheckBox.Name = "caseSensitiveCheckBox";
             this.caseSensitiveCheckBox.Size = new System.Drawing.Size(131, 24);
-            this.caseSensitiveCheckBox.TabIndex = 15;
+            this.caseSensitiveCheckBox.TabIndex = 1;
             this.caseSensitiveCheckBox.Text = "Case-sensitive";
             this.caseSensitiveCheckBox.UseVisualStyleBackColor = true;
+            this.caseSensitiveCheckBox.CheckedChanged += new System.EventHandler(this.CaseSensitiveCheckBox_CheckedChanged);
+            //
+            // feedbackLabel
+            //
+            this.feedbackLabel.AutoEllipsis = true;
+            this.feedbackLabel.Location = new System.Drawing.Point(13, 198);
+            this.feedbackLabel.Name = "feedbackLabel";
+            this.feedbackLabel.Size = new System.Drawing.Size(396, 68);
+            this.feedbackLabel.TabIndex = 4;
+            this.feedbackLabel.Text = "Ready to scan.";
+            this.feedbackLabel.UseMnemonic = false;
             // 
             // ScanCodeForm
             // 
@@ -97,7 +107,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.closeButton;
-            this.ClientSize = new System.Drawing.Size(424, 201);
+            this.ClientSize = new System.Drawing.Size(424, 281);
+            this.Controls.Add(this.feedbackLabel);
             this.Controls.Add(this.caseSensitiveCheckBox);
             this.Controls.Add(this.guideLabel);
             this.Controls.Add(this.scanButton);
@@ -110,7 +121,7 @@
             this.MinimizeBox = false;
             this.Name = "ScanCodeForm";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Scan Code";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -125,5 +136,6 @@
         private System.Windows.Forms.Button closeButton;
         private System.Windows.Forms.Label guideLabel;
         private System.Windows.Forms.CheckBox caseSensitiveCheckBox;
+        private System.Windows.Forms.Label feedbackLabel;
     }
 }

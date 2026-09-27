@@ -13,9 +13,11 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                loadDataOpenFileDialog?.Dispose();
+                inventoryTable?.Dispose();
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -47,6 +49,8 @@
             checkingFieldComboBox = new ComboBox();
             buttonLoadData = new Button();
             inventoryBindingSource = new BindingSource(components);
+            inventoryStatusStrip = new StatusStrip();
+            inventoryStatusLabel = new ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)inventoryDataGridView).BeginInit();
             searchGroupBox.SuspendLayout();
             controlPanel.SuspendLayout();
@@ -58,6 +62,8 @@
             // 
             inventoryDataGridView.AllowUserToAddRows = false;
             inventoryDataGridView.AllowUserToDeleteRows = false;
+            inventoryDataGridView.ReadOnly = true;
+            inventoryDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
             dataGridViewCellStyle1.BackColor = Color.FromArgb(224, 224, 224);
             inventoryDataGridView.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             inventoryDataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -118,7 +124,7 @@
             // keywordTextBox
             // 
             keywordTextBox.Location = new Point(10, 63);
-            keywordTextBox.MaxLength = 50;
+            keywordTextBox.MaxLength = 32767;
             keywordTextBox.Name = "keywordTextBox";
             keywordTextBox.Size = new Size(431, 26);
             keywordTextBox.TabIndex = 1;
@@ -133,7 +139,7 @@
             scanCodeButton.TabIndex = 1;
             scanCodeButton.Text = "S&can Code";
             scanCodeButton.TextImageRelation = TextImageRelation.ImageBeforeText;
-            toolTip.SetToolTip(scanCodeButton, "Scan QR code for chemical");
+            toolTip.SetToolTip(scanCodeButton, "Scan barcodes or QR codes using a keyboard scanner with an Enter suffix");
             scanCodeButton.UseVisualStyleBackColor = true;
             scanCodeButton.Click += ScanCodeButton_Click;
             // 
@@ -149,9 +155,9 @@
             exportButton.Name = "exportButton";
             exportButton.Size = new Size(172, 35);
             exportButton.TabIndex = 2;
-            exportButton.Text = "&Export to MS Excel";
+            exportButton.Text = "&Export Results";
             exportButton.TextImageRelation = TextImageRelation.ImageBeforeText;
-            toolTip.SetToolTip(exportButton, "Export checking result to Microsoft Excel");
+            toolTip.SetToolTip(exportButton, "Save all inventory rows and checks to Excel or CSV");
             exportButton.UseVisualStyleBackColor = true;
             exportButton.Click += ExportButton_Click;
             // 
@@ -210,16 +216,21 @@
             // 
             // InventoryForm
             // 
+            inventoryStatusStrip.Items.Add(inventoryStatusLabel);
+            inventoryStatusStrip.Name = "inventoryStatusStrip";
+            inventoryStatusLabel.Name = "inventoryStatusLabel";
+            inventoryStatusLabel.Spring = true;
+            inventoryStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(984, 579);
             Controls.Add(inventoryDataGridView);
             Controls.Add(controlPanel);
+            Controls.Add(inventoryStatusStrip);
             Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle = FormBorderStyle.Sizable;
             Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(4, 5, 4, 5);
-            MaximumSize = new Size(1000, 618);
             MinimumSize = new Size(1000, 618);
             Name = "InventoryForm";
             StartPosition = FormStartPosition.CenterScreen;
@@ -251,6 +262,8 @@
         private Label checkingFieldLabel;
         private ComboBox checkingFieldComboBox;
         private Button exportButton;
+        private StatusStrip inventoryStatusStrip;
+        private ToolStripStatusLabel inventoryStatusLabel;
     }
 }
 

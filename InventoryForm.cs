@@ -1,212 +1,231 @@
 ﻿using System.Data;
-using Accord.IO;
-using Excel = Microsoft.Office.Interop.Excel;
 
-namespace InventoryChecker
+namespace InventoryChecker;
+
+public partial class InventoryForm : Form
 {
-    public partial class InventoryForm : Form
+    private DataTable? inventoryTable;
+    private string? sourceFileName;
+    private bool hasUnsavedChanges;
+    private bool isCaseSensitive;
+
+    public InventoryForm()
     {
-        //Fields
-        private readonly ScanCodeForm scanCodeForm = new();
-        private readonly ItemCheckedForm itemCheckedForm = new();
-        private DataTable? inventoryTable;
-        //Contructor
-        public InventoryForm()
+        InitializeComponent();
+        UpdateStatus();
+    }
+
+    private void ButtonLoadData_Click(object sender, EventArgs e)
+    {
+        if (loadDataOpenFileDialog.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        // Save first: the export may overwrite the same CSV the user is about to reload.
+        if (!ConfirmSaveChanges())
+            return;
+
+        DataTable loadedTable;
+        try
         {
-            InitializeComponent();
+            // Validate separately, preserving the current session on any import failure.
+            loadedTable = InventoryFile.LoadCsv(loadDataOpenFileDialog.FileName);
+        }
+        catch (Exception exception)
+        {
+            ShowError("Could not load inventory", exception);
+            return;
         }
 
-        //Event handlers
-        private void ButtonLoadData_Click(object sender, EventArgs e)
+        DataTable? previousTable = inventoryTable;
+        inventoryTable = loadedTable;
+        sourceFileName = loadDataOpenFileDialog.FileName;
+        hasUnsavedChanges = false;
+        keywordTextBox.Clear();
+        inventoryBindingSource.RemoveFilter();
+        inventoryBindingSource.Sort = string.Empty;
+        inventoryBindingSource.DataSource = inventoryTable;
+        inventoryDataGridView.DataSource = inventoryBindingSource;
+        previousTable?.Dispose();
+
+        searchFieldComboBox.Items.Clear();
+        checkingFieldComboBox.Items.Clear();
+        foreach (DataColumn column in inventoryTable.Columns)
         {
-            if (loadDataOpenFileDialog.ShowDialog(this) != DialogResult.OK)
-                return;
+            if (column.ColumnName == InventoryFile.CheckedColumnName)
+                continue;
+            searchFieldComboBox.Items.Add(column.ColumnName);
+            checkingFieldComboBox.Items.Add(column.ColumnName);
+        }
 
-            try
+        searchFieldComboBox.SelectedIndex = 0;
+        checkingFieldComboBox.SelectedIndex = 0;
+        foreach (string field in checkingFieldComboBox.Items)
+        {
+            if (string.Equals(field, "Code", StringComparison.OrdinalIgnoreCase))
             {
-                string filename = loadDataOpenFileDialog.FileName;
-                string extension = Path.GetExtension(filename);
-                if (extension == ".csv")
-                {
-                    CsvReader csvReader = new(filename, true);
-                    inventoryTable = csvReader.ToTable();
-                }
-                else
-                {
-                    throw new Exception("Cannot open the selected file!");
-                }
-
-                if (inventoryTable.Columns.Count == 0)
-                    throw new Exception("Empty database!");
+                checkingFieldComboBox.SelectedItem = field;
+                break;
             }
-            catch (Exception exception)
-            {
-                MessageBox.Show(this, exception.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+        }
 
-            searchFieldComboBox.Items.Clear();
-            foreach (DataColumn dataColumn in inventoryTable.Columns)
-                searchFieldComboBox.Items.Add(dataColumn.ColumnName);
-            searchFieldComboBox.SelectedIndex = 0;
+        searchGroupBox.Enabled = true;
+        checkingGroupBox.Enabled = true;
+        UpdateStatus();
+    }
 
-            checkingFieldComboBox.Items.Clear();
-            foreach (DataColumn dataColumn in inventoryTable.Columns)
-                checkingFieldComboBox.Items.Add(dataColumn.ColumnName);
-            foreach (string item in checkingFieldComboBox.Items)
+    private void KeywordTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.KeyCode != Keys.Enter)
+            return;
+        e.SuppressKeyPress = true;
+        SearchButton_Click(searchButton, EventArgs.Empty);
+    }
+
+    private void SearchButton_Click(object sender, EventArgs e)
+    {
+        if (inventoryTable == null || searchFieldComboBox.SelectedItem is not string field)
+            return;
+
+        inventoryBindingSource.Filter = InventoryOperations.BuildSearchFilter(field, keywordTextBox.Text);
+        UpdateStatus();
+    }
+
+    private void ScanCodeButton_Click(object sender, EventArgs e)
+    {
+        if (inventoryTable == null || checkingFieldComboBox.SelectedItem is not string field)
+            return;
+
+        keywordTextBox.Clear();
+        inventoryBindingSource.RemoveFilter();
+        UpdateStatus();
+        using var scanner = new ScanCodeForm { IsCaseSensitive = isCaseSensitive };
+        scanner.CodeSubmitted += (_, _) =>
+        {
+            ScanOutcome outcome = InventoryOperations.CheckItem(inventoryTable, field, scanner.Code ?? string.Empty, scanner.IsCaseSensitive);
+            string message;
+            switch (outcome.Result)
             {
-                if (item == "Code")
-                {
-                    checkingFieldComboBox.Text = "Code";
+                case ScanResult.Checked:
+                    hasUnsavedChanges = true;
+                    message = $"Checked: {scanner.Code}";
                     break;
-                }
-                checkingFieldComboBox.SelectedIndex = 0;
-            }
-
-            inventoryTable.Columns.Add("Checked", typeof(bool));
-
-            inventoryBindingSource.DataSource = inventoryTable;
-            inventoryDataGridView.DataSource = null;
-            inventoryDataGridView.DataSource = inventoryBindingSource;
-
-            searchGroupBox.Enabled = true;
-            checkingGroupBox.Enabled = true;
-        }
-
-        private void KeywordTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (inventoryTable != null && e.KeyCode == Keys.Enter)
-                SearchButton_Click(searchButton, EventArgs.Empty);
-        }
-
-        private void SearchButton_Click(object sender, EventArgs e)
-        {
-            if (inventoryTable == null || keywordTextBox.Text.Length == 1)
-                return;
-
-            if (keywordTextBox.Text.Length == 0)
-                inventoryBindingSource.Filter = "";
-
-            inventoryBindingSource.Filter = "[" + searchFieldComboBox.SelectedItem.ToString() + "] LIKE '%" + keywordTextBox.Text + "%'";
-        }
-
-        private void ScanCodeButton_Click(object sender, EventArgs e)
-        {
-            if (inventoryTable == null)
-                return;
-
-            inventoryBindingSource.Filter = "";
-
-            while (true)
-            {
-                bool itemFound = false;
-                if (scanCodeForm.ShowDialog(this) != DialogResult.OK)
+                case ScanResult.AlreadyChecked:
+                    message = $"Already checked: {scanner.Code}";
                     break;
-
-                string checkingFieldName = checkingFieldComboBox.Text;
-
-                foreach (DataRow dataRow in inventoryTable.Rows)
-                    if (scanCodeForm.IsCaseSensitive)
-                    {
-                        if (dataRow[checkingFieldName].ToString() == scanCodeForm.Code)
-                        {
-                            itemFound = true;
-                            dataRow["Checked"] = true;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (scanCodeForm.Code != null && ((string)dataRow[checkingFieldName]).ToLower() == scanCodeForm.Code.ToLower())
-                        {
-                            itemFound = true;
-                            dataRow["Checked"] = true;
-                            break;
-                        }
-                    }
-
-                if (itemFound)
-                {
-                    Task.Delay(2000).ContinueWith((t) =>
-                    {
-                        if (itemCheckedForm == null || itemCheckedForm.Disposing || itemCheckedForm.IsDisposed)
-                            return;
-
-                        itemCheckedForm.Invoke(new Action(() => { itemCheckedForm.Close(); }));
-                    });
-
-                    itemCheckedForm.ScannedValue = scanCodeForm.Code;
-                    itemCheckedForm.ShowDialog(this);
-                }
-                else
-                {
-                    MessageBox.Show(this, "Cannot find the item in the inventory", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                case ScanResult.Ambiguous:
+                    message = $"{outcome.MatchCount} rows match this code. Nothing changed. Close this window and select a unique checking field.";
                     break;
-                }
+                case ScanResult.EmptyCode:
+                    message = "Enter or scan a code.";
+                    break;
+                default:
+                    message = $"Not found: {scanner.Code}. Ready for another scan.";
+                    break;
             }
-        }
 
-        private void ExportButton_Click(object sender, EventArgs e)
+            if (outcome.Row != null)
+                SelectInventoryRow(outcome.Row);
+            scanner.ShowFeedback(message, outcome.Result == ScanResult.Checked);
+            UpdateStatus();
+        };
+        scanner.ShowDialog(this);
+        isCaseSensitive = scanner.IsCaseSensitive;
+    }
+
+    private void SelectInventoryRow(DataRow row)
+    {
+        // Binding order may differ from table order after a user sorts a column.
+        for (int index = 0; index < inventoryBindingSource.Count; index++)
         {
-            Cursor = Cursors.WaitCursor;
-
-            try
+            if (inventoryBindingSource[index] is DataRowView view && ReferenceEquals(view.Row, row))
             {
-                CopyInventoryToClipboard();
-
-                Excel.Application application;
-                Excel.Workbook workBook;
-                Excel.Worksheet workSheet;
-                application = new Excel.Application
-                {
-                    Visible = true
-                };
-                workBook = application.Workbooks.Add(System.Reflection.Missing.Value);
-                workSheet = (Excel.Worksheet)workBook.Worksheets.get_Item(1);
-                Excel.Range range = (Excel.Range)workSheet.Cells[1, 1];
-                range.Select();
-                workSheet.PasteSpecial(range, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, true);
-
-                ReleaseObject(workSheet);
-                ReleaseObject(workBook);
-                ReleaseObject(application);
-
-                Clipboard.Clear();
-                Cursor = Cursors.Default;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Cursor = Cursors.Default;
-            }
-        }
-
-        private void CopyInventoryToClipboard()
-        {
-            inventoryDataGridView.SelectAll();
-            DataObject dataObj = inventoryDataGridView.GetClipboardContent();
-            if (dataObj != null)
-                Clipboard.SetDataObject(dataObj);
-            inventoryDataGridView.ClearSelection();
-        }
-
-        private static void ReleaseObject(object? obj)
-        {
-            try
-            {
-                if (obj != null)
-                    System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
-                obj = null;
-            }
-            catch (Exception ex)
-            {
-                obj = null;
-                MessageBox.Show("Exception occurred while releasing object: " + ex.ToString());
-            }
-            finally
-            {
-                GC.Collect();
+                inventoryBindingSource.Position = index;
+                if (inventoryDataGridView.Columns.Count > 0)
+                    inventoryDataGridView.CurrentCell = inventoryDataGridView.Rows[index].Cells[0];
+                break;
             }
         }
     }
+
+    private void ExportButton_Click(object sender, EventArgs e) => ExportInventory();
+
+    private bool ExportInventory()
+    {
+        if (inventoryTable == null)
+            return false;
+
+        using var dialog = new SaveFileDialog
+        {
+            Title = "Export all inventory rows",
+            Filter = "Excel workbook (*.xlsx)|*.xlsx|CSV inventory (*.csv)|*.csv",
+            DefaultExt = "xlsx",
+            AddExtension = true,
+            OverwritePrompt = true,
+            FileName = Path.GetFileNameWithoutExtension(sourceFileName) + "-checked"
+        };
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+            return false;
+
+        try
+        {
+            UseWaitCursor = true;
+            string extension = Path.GetExtension(dialog.FileName);
+            if (string.Equals(extension, ".csv", StringComparison.OrdinalIgnoreCase))
+                InventoryFile.SaveCsv(inventoryTable, dialog.FileName);
+            else if (string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase))
+                InventoryFile.SaveExcel(inventoryTable, dialog.FileName);
+            else
+                throw new InvalidDataException("Choose a .csv or .xlsx filename.");
+
+            hasUnsavedChanges = false;
+            UpdateStatus();
+            inventoryStatusLabel.Text += $"   Saved: {Path.GetFileName(dialog.FileName)}";
+            return true;
+        }
+        catch (Exception exception)
+        {
+            ShowError("Could not export inventory", exception);
+            return false;
+        }
+        finally
+        {
+            UseWaitCursor = false;
+        }
+    }
+
+    private bool ConfirmSaveChanges()
+    {
+        if (!hasUnsavedChanges)
+            return true;
+
+        DialogResult choice = MessageBox.Show(this,
+            "Export your checked results before continuing?\n\nChoose Cancel to keep working, or No to discard unsaved checks.",
+            "Unsaved checks", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+        return choice == DialogResult.No || (choice == DialogResult.Yes && ExportInventory());
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        base.OnFormClosing(e);
+        if (!e.Cancel && !ConfirmSaveChanges())
+            e.Cancel = true;
+    }
+
+    private void UpdateStatus()
+    {
+        Text = "Inventory Checker" + (sourceFileName == null ? string.Empty : $" — {Path.GetFileName(sourceFileName)}")
+            + (hasUnsavedChanges ? " *" : string.Empty);
+        if (inventoryTable == null)
+        {
+            inventoryStatusLabel.Text = "Load a CSV inventory to begin.";
+            return;
+        }
+
+        int checkedCount = inventoryTable.AsEnumerable().Count(row => row.Field<bool>(InventoryFile.CheckedColumnName));
+        inventoryStatusLabel.Text = $"{checkedCount} / {inventoryTable.Rows.Count} checked   |   {inventoryBindingSource.Count} shown"
+            + (hasUnsavedChanges ? "   |   Unsaved checks" : string.Empty);
+    }
+
+    private void ShowError(string title, Exception exception) =>
+        MessageBox.Show(this, exception.Message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
 }
